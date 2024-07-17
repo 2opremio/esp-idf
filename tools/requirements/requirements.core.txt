@@ -11,9 +11,9 @@ pyparsing
 pyelftools
 idf-component-manager
 esp-coredump
-esptool
+esptool @ git+https://github.com/2opremio/esptool@3bd3d616f9b929a76e64e2f78bb9c9eaabd35d4d
 esp-idf-kconfig
-esp-idf-monitor
+esp-idf-monitor @ git+https://github.com/2opremio/esp-idf-monitor@e4ee452687d3215150be49992668f9e3faec8d6b
 esp-idf-size
 esp-idf-panic-decoder
 pyclang
