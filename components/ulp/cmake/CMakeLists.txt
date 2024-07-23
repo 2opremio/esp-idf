@@ -54,6 +54,9 @@ target_link_options(${ULP_APP_NAME} PRIVATE SHELL:-T ${CMAKE_CURRENT_BINARY_DIR}
 
 # To avoid warning "Manually-specified variables were not used by the project"
 set(bypassWarning "${IDF_TARGET}")
+if (ULP_COMPILE_DEFINITIONS)
+    target_compile_definitions(${ULP_APP_NAME} PRIVATE ${ULP_COMPILE_DEFINITIONS})
+endif()
 if(ULP_COCPU_IS_RISCV)
     #risc-v ulp uses extra files for building:
     list(APPEND ULP_S_SOURCES
