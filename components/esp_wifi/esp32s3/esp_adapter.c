@@ -603,6 +603,32 @@ static void esp_phy_disable_wrapper(void)
     esp_phy_disable(PHY_MODEM_WIFI);
 }
 
+static void esp_log_writev_wrapper(esp_log_level_t level,
+                                   const char *tag,
+                                   const char *format,
+                                   va_list args)
+{
+
+#if CONFIG_LOG_MASTER_LEVEL
+    if (level > esp_log_get_level_master()) {
+        return;
+    }
+#endif
+    return esp_log_writev(level, tag, format, args);
+}
+
+static void esp_log_write_wrapper(esp_log_level_t level,
+                                  const char *tag,
+                                  const char *format, ...)
+{
+#if CONFIG_LOG_MASTER_LEVEL
+    if (level > esp_log_get_level_master()) {
+        return;
+    }
+#endif
+    return esp_log_write(level, tag, format);
+}
+
 wifi_osi_funcs_t g_wifi_osi_funcs = {
     ._version = ESP_WIFI_OS_ADAPTER_VERSION,
     ._env_is_chip = esp_coex_common_env_is_chip_wrapper,
@@ -687,8 +713,8 @@ wifi_osi_funcs_t g_wifi_osi_funcs = {
     ._get_time = get_time_wrapper,
     ._random = os_random,
     ._slowclk_cal_get = esp_coex_common_clk_slowclk_cal_get_wrapper,
-    ._log_write = esp_log_write,
-    ._log_writev = esp_log_writev,
+    ._log_write = esp_log_write_wrapper,
+    ._log_writev = esp_log_writev_wrapper,
     ._log_timestamp = esp_log_timestamp,
     ._malloc_internal =  esp_coex_common_malloc_internal_wrapper,
     ._realloc_internal = realloc_internal_wrapper,
