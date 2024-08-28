@@ -98,7 +98,7 @@ extern "C" {
 #define RTC_CNTL_XTL_BUF_WAIT_DEFAULT               25
 #define RTC_CNTL_CK8M_WAIT_DEFAULT                  5        // Equivalent macro as `CLK_LL_RC_FAST_WAIT_DEFAULT`
 #define RTC_CK8M_ENABLE_WAIT_DEFAULT                2        // Equivalent macro as `CLK_LL_RC_FAST_ENABLE_WAIT_DEFAULT`
-#define RTC_CNTL_ULPCP_TOUCH_START_WAIT_IN_SLEEP    (0x40)
+#define RTC_CNTL_ULPCP_TOUCH_START_WAIT_IN_SLEEP    (0x04)
 #define RTC_CNTL_ULPCP_TOUCH_START_WAIT_DEFAULT     (0x04)
 #define RTC_CNTL_CK8M_WAIT_SLP_CYCLES               (1)
 #define RTC_CNTL_WAKEUP_DELAY_CYCLES                (1)
