@@ -179,6 +179,9 @@ esp_err_t esp_sleep_enable_ulp_wakeup(void);
  */
 esp_err_t esp_sleep_enable_timer_wakeup(uint64_t time_in_us);
 
+// Fons: enable timer wakeup source without touching the timer itself
+esp_err_t esp_sleep_enable_preserved_timer_wakeup();
+
 #if SOC_TOUCH_SENSOR_SUPPORTED
 /**
  * @brief Enable wakeup by touch sensor

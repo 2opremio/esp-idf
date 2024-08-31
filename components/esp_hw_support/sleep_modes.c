@@ -207,6 +207,7 @@ typedef struct {
     } domain[ESP_PD_DOMAIN_MAX];
     portMUX_TYPE lock;
     uint64_t sleep_duration;
+    bool preserve_sleep_timer;
     uint32_t wakeup_triggers : 15;
 #if SOC_PM_SUPPORT_EXT1_WAKEUP
     uint32_t ext1_trigger_mode : 22;  // 22 is the maximum RTCIO number in all chips
@@ -931,7 +932,7 @@ static esp_err_t IRAM_ATTR esp_sleep_start(uint32_t pd_flags, esp_sleep_mode_t m
 #endif
 
     // Configure timer wakeup
-    if (!should_skip_sleep && (s_config.wakeup_triggers & RTC_TIMER_TRIG_EN)) {
+    if (!s_config.preserve_sleep_timer && !should_skip_sleep && (s_config.wakeup_triggers & RTC_TIMER_TRIG_EN)) {
         if (timer_wakeup_prepare(sleep_duration) != ESP_OK) {
             should_skip_sleep = allow_sleep_rejection ? true : false;
         }
@@ -1573,6 +1574,13 @@ esp_err_t esp_sleep_enable_timer_wakeup(uint64_t time_in_us)
 {
     s_config.wakeup_triggers |= RTC_TIMER_TRIG_EN;
     s_config.sleep_duration = time_in_us;
+    return ESP_OK;
+}
+
+esp_err_t esp_sleep_enable_preserved_timer_wakeup()
+{
+    s_config.wakeup_triggers |= RTC_TIMER_TRIG_EN;
+    s_config.preserve_sleep_timer = true;
     return ESP_OK;
 }
 
