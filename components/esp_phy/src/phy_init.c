@@ -818,13 +818,6 @@ void esp_phy_load_cal_and_init(void)
     phy_init_param_set(1);
 #endif
 
-    esp_phy_calibration_data_t* cal_data =
-            (esp_phy_calibration_data_t*) calloc(sizeof(esp_phy_calibration_data_t), 1);
-    if (cal_data == NULL) {
-        ESP_LOGE(TAG, "failed to allocate memory for RF calibration data");
-        abort();
-    }
-
 #if CONFIG_ESP_PHY_REDUCE_TX_POWER
     const esp_phy_init_data_t* phy_init_data = esp_phy_get_init_data();
     if (phy_init_data == NULL) {
@@ -855,6 +848,13 @@ void esp_phy_load_cal_and_init(void)
 #endif
 
 #ifdef CONFIG_ESP_PHY_CALIBRATION_AND_DATA_STORAGE
+    esp_phy_calibration_data_t* cal_data =
+        (esp_phy_calibration_data_t*) calloc(sizeof(esp_phy_calibration_data_t), 1);
+    if (cal_data == NULL) {
+        ESP_LOGE(TAG, "failed to allocate memory for RF calibration data");
+        abort();
+    }
+
     esp_phy_calibration_mode_t calibration_mode = CONFIG_ESP_PHY_CALIBRATION_MODE;
     uint8_t sta_mac[6];
     if (esp_rom_get_reset_reason(0) == RESET_REASON_CORE_DEEP_SLEEP) {
@@ -879,7 +879,14 @@ void esp_phy_load_cal_and_init(void)
         err = ESP_OK;
     }
 #else
-    register_chipv7_phy(init_data, cal_data, PHY_RF_CAL_FULL);
+    static RTC_DATA_ATTR esp_phy_calibration_data_t cached_cal_data;
+    static RTC_DATA_ATTR bool cached_cal_data_initialized = false;
+    if (!cached_cal_data_initialized) {
+        cached_cal_data_initialized = true;
+        register_chipv7_phy(init_data, &cached_cal_data, PHY_RF_CAL_FULL);
+    } else {
+        register_chipv7_phy(init_data, &cached_cal_data, CONFIG_ESP_PHY_CALIBRATION_MODE);
+    }
 #endif
 
 #if CONFIG_ESP_PHY_IMPROVE_RX_11B
@@ -902,7 +909,9 @@ void esp_phy_load_cal_and_init(void)
 #endif
 #endif
 
+#ifdef CONFIG_ESP_PHY_CALIBRATION_AND_DATA_STORAGE
     free(cal_data); // PHY maintains a copy of calibration data, so we can free this
+#endif
 }
 
 #if CONFIG_ESP_PHY_MULTIPLE_INIT_DATA_BIN
