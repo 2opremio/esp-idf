@@ -2483,6 +2483,11 @@ wpa_set_passphrase(char * passphrase, u8 *ssid, size_t ssid_len)
         sm->key_mgmt == WPA_KEY_MGMT_DPP)
         return;
 
+    // PMK-cache in RTC memory (so that it survives deep-sleeps)
+    static RTC_DATA_ATTR u8 cached_ssid[SSID_MAX_LEN] = {0};
+    static RTC_DATA_ATTR size_t cached_ssid_len = 0;
+    static RTC_DATA_ATTR u8 cached_pmk[PMK_LEN] = {0};
+
     /* This is really SLOW, so just re cacl while reset param */
     if (esp_wifi_sta_get_reset_param_internal() != 0) {
         // check it's psk
@@ -2491,8 +2496,13 @@ wpa_set_passphrase(char * passphrase, u8 *ssid, size_t ssid_len)
                            esp_wifi_sta_get_ap_info_prof_pmk_internal(), PMK_LEN) != 0)
                 return;
         } else {
-            pbkdf2_sha1((char *)esp_wifi_sta_get_prof_password_internal(), sta_ssid->ssid, (size_t)sta_ssid->len,
-                        4096, esp_wifi_sta_get_ap_info_prof_pmk_internal(), PMK_LEN);
+            if (cached_ssid_len == ssid_len && memcmp(ssid, cached_ssid, ssid_len) == 0) {
+                // Use RTC-cached pmk
+                memcpy(esp_wifi_sta_get_ap_info_prof_pmk_internal(), cached_pmk, PMK_LEN);
+            } else {
+                pbkdf2_sha1((char *)esp_wifi_sta_get_prof_password_internal(), sta_ssid->ssid, (size_t)sta_ssid->len,
+                            4096, esp_wifi_sta_get_ap_info_prof_pmk_internal(), PMK_LEN);
+            }
         }
         esp_wifi_sta_update_ap_info_internal();
         esp_wifi_sta_set_reset_param_internal(0);
@@ -2503,6 +2513,10 @@ wpa_set_passphrase(char * passphrase, u8 *ssid, size_t ssid_len)
     } else {
         memcpy(sm->pmk, esp_wifi_sta_get_ap_info_prof_pmk_internal(), PMK_LEN);
         sm->pmk_len = PMK_LEN;
+        // Save pmk to cache
+        memcpy(cached_ssid, ssid, ssid_len);
+        cached_ssid_len = ssid_len;
+        memcpy(cached_pmk, sm->pmk, PMK_LEN);
     }
 #ifdef CONFIG_IEEE80211R
     /* Set XXKey to be PSK for FT key derivation */
